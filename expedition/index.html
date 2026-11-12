@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Expedition">
+<meta name="theme-color" content="#0d1830">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>The Hot Springs Expedition</title>
+<style>
+  :root{
+    --navy:#0d1830;
+    --navy-2:#15223c;
+    --navy-3:#1c2d4b;
+    --gold:#c9a227;
+    --gold-br:#eccb5e;
+    --parch:#f4ecda;
+    --ink:#e7e1d2;
+    --muted:#93a0b8;
+    --line:rgba(201,162,39,.26);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{background:var(--navy)}
+  body{
+    margin:0;background:var(--navy);color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));line-height:1.5;
+  }
+  .wrap{max-width:720px;margin:0 auto}
+
+  header{text-align:center;padding:10px 0 4px}
+  .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);opacity:.9}
+  h1{margin:10px 0 0;font-size:clamp(26px,7vw,36px);line-height:1.1;color:var(--parch)}
+  .dates{margin-top:10px;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:18px 0}
+
+  .bench{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 20px}
+  .die{
+    background:var(--navy-2);border:1px solid var(--line);border-radius:12px;
+    padding:12px 10px 12px;text-align:center;cursor:pointer;
+    transition:border-color .2s,transform .1s;user-select:none;-webkit-user-select:none;
+  }
+  .die:active{transform:scale(.98)}
+  .die h3{margin:0 0 4px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .die canvas{width:124px;height:124px;display:block;margin:0 auto}
+  .dieout{min-height:34px;margin-top:4px;font-size:12px;color:var(--muted);line-height:1.4}
+  .dieout b{color:var(--gold-br);font-weight:600}
+  .dieout.crit b{color:#ffdc7a}
+  .dieout.fumble b{color:#d98080}
+  .prompt{color:var(--parch);font-size:13px}
+
+  .prog{display:flex;align-items:center;gap:10px;margin:0 0 6px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .bar{flex:1;height:7px;border-radius:99px;background:var(--navy-3);border:1px solid var(--line);overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-br));transition:width .4s ease}
+  .status{font-size:11px;color:var(--muted);text-align:center;margin-bottom:20px;font-style:italic}
+  .status a{color:var(--gold-br)}
+
+  h2{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin:30px 0 4px;display:flex;align-items:center;gap:12px}
+  h2:after{content:"";flex:1;height:1px;background:var(--line)}
+  .sub{font-size:12px;color:var(--muted);margin:0 0 12px;letter-spacing:.06em}
+
+  .card{
+    background:var(--navy-2);border:1px solid var(--line);border-radius:10px;
+    padding:13px 14px 13px 12px;margin-bottom:9px;display:flex;gap:12px;align-items:flex-start;
+    cursor:pointer;transition:border-color .2s,opacity .2s;
+  }
+  .card.done{opacity:.46}
+  .card.done .t{text-decoration:line-through}
+  .box{flex:0 0 22px;height:22px;margin-top:2px;border:1.5px solid var(--gold);border-radius:5px;display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--navy);transition:background .2s}
+  .card.done .box{background:var(--gold)}
+  .card.done .box:after{content:"\2713"}
+  .t{font-size:16.5px;color:var(--parch);line-height:1.32}
+  .m{font-size:13px;color:var(--muted);margin-top:5px}
+  .tag{display:inline-block;font-size:10px;letter-spacing:.13em;text-transform:uppercase;border:1px solid var(--line);border-radius:99px;padding:2px 8px;margin:8px 5px 0 0;color:var(--gold)}
+  .map{display:inline-block;margin-top:8px;font-size:12px;letter-spacing:.06em;color:var(--gold-br);text-decoration:none;border-bottom:1px dotted var(--gold)}
+
+  .reset{display:block;margin:26px auto 0;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:9px 16px;font:13px Georgia,serif;cursor:pointer}
+  footer{text-align:center;margin:24px 0 12px;font-size:12px;color:var(--muted);font-style:italic}
+
+  @media (max-width:380px){ .bench{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">A Quest In Three Days</div>
+  <h1>The Hot Springs Expedition</h1>
+  <div class="dates">Nov 12 &ndash; 15 &middot; Lance &amp; Zach</div>
+</header>
+
+<div class="rule"></div>
+
+<div class="bench">
+  <div class="die" id="d20card">
+    <h3>Player</h3>
+    <canvas id="d20"></canvas>
+    <div class="dieout" id="d20out">Tap to roll</div>
+  </div>
+  <div class="die" id="d12card">
+    <h3>The World</h3>
+    <canvas id="d12"></canvas>
+    <div class="dieout" id="d12out">Tap for a prompt</div>
+  </div>
+</div>
+
+<div class="prog">
+  <span id="ptext">0 / 0</span>
+  <span class="bar"><i id="pbar"></i></span>
+</div>
+<div class="status">Checkmarks save on this phone. For shared checkmarks, use the <a href="https://claude.ai/artifact/E4ax1gVdH9DjsohjRY3Mt3" target="_blank" rel="noopener">live version</a>.</div>
+
+<h2>Before We Go</h2>
+<p class="sub">Lance is handling these</p>
+<div id="prep"></div>
+
+<h2>Thursday</h2>
+<p class="sub">Drive in, eat, do nothing else</p>
+<div id="thu"></div>
+
+<h2>Friday</h2>
+<p class="sub">Trail and tall tales</p>
+<div id="fri"></div>
+
+<h2>Saturday</h2>
+<p class="sub">Gardens and spirits</p>
+<div id="sat"></div>
+
+<h2>Sunday</h2>
+<p class="sub">The road home</p>
+<div id="sun"></div>
+
+<h2>Pack</h2>
+<p class="sub">Tick yours off as you go</p>
+<div id="pack"></div>
+
+<button class="reset" id="reset">Clear checkmarks</button>
+<footer>Roll well.</footer>
+</div>
+
+<script src="three.min.js"></script>
+<script>
+var PLAN = {
+  prep:[
+    ["p1","Room booked: Best Court","638 Ouachita Ave. Renovated 1930s cottage, full kitchen and a cafe on site.",["Locked in"]],
+    ["p2","Dinner reservation at VAULT","Friday night, 7:15 pm.",["Reserved"]],
+    ["p3","Garvan Gardens tickets","Bought online ahead of time. They sell out on weekends.",["Online"]],
+    ["p4","Watch the forecast","Mid-November highs usually run 55 to 65. Could be colder.",["Week of"]]
+  ],
+  thu:[
+    ["t1","Check in, drop bags","",[]],
+    ["t2","Dinner at Superior Bathhouse Brewery","A brewery inside a converted 1920s bathhouse. They brew with the thermal spring water.",["Walk in"]],
+    ["t3","Walk Bathhouse Row at night","Lit up and quiet. Costs nothing.",[]]
+  ],
+  fri:[
+    ["f1","Hike, short option: Goat Rock","From Gulpha Gorge campground. Shaded forest, novaculite outcrop at the top, deer in the morning mist. Roughly 2 miles round trip.",["1 to 2 hrs"]],
+    ["f2","Hike, long option: Sunset Trail west","West Mountain trailhead to Music Mountain, highest point in the park at 1,405 ft. 2.8 miles each way.",["3 to 4 hrs"]],
+    ["f3","Hot Springs Mountain Tower","216 feet up, 360 degree view, scenic drive to the base. Around $12 to $17.",["Midday"]],
+    ["f6","Spa Records","303 Albert Pike Rd. Fri 10 am to 5 pm (closed Sun and Mon). Small underground record shop, the owner lets you listen before you buy. Free to browse. Parking: outside the downtown paid zone, about a 5 min drive from the cottage.",["Afternoon","Closes 5"]],
+    ["f7","Steam City Records","239 Central Ave, Suite C. Fri 10 am to 6 pm. Rare records, tapes and clothes. The owner is a musician and plays records before you buy. Free to browse. Parking: Central Ave is $4/hr (4 hr max, enforced 8 to 6 Mon to Sat), or the Exchange Street deck a block over at $2/hr. About a 20 min walk from the cottage.",["Afternoon","Closes 6"]],
+    ["f8","Steadfast Hobbies & Games","614 Ouachita Ave, Suite 102. Fri noon to midnight. D&D books, board games, vintage comics. Free to browse. Parking: none needed, it is two doors from the cottage. Open late, so it works after VAULT too.",["Anytime","Open til midnight"]],
+    ["f9","West Mountain overlook at sunset","Optional, right before VAULT. Sunset is around 5, so head up about 4:30. About a 10 min drive from the cottage: Prospect Ave, right on West Mountain Dr, left on West Mountain Summit Dr, parking at the top on the right. Bring the blanket.",["Optional","Leave 4:30"]],
+    ["f5","Dinner at VAULT","The nice one. Dim and slow. Get the smoked old fashioned.",["Reserved"]]
+  ],
+  sat:[
+    ["s1","Garvan Woodland Gardens","210 acres on Lake Hamilton. The Japanese garden is ranked top ten in the country, and Anthony Chapel is worth the walk. Budget two to three hours.",["Ticketed"]],
+    ["s2","Crystal Ridge Distillery","Ten dollar moonshine tasting. Reviewers mostly rave about the staff.",["Afternoon"]],
+    ["s3","Dinner at The GOAT","Mediterranean. The shawarma, the feta dip, and do not skip the baklava.",[]]
+  ],
+  sun:[
+    ["u1","Slow morning","Coffee in the cottage. No alarm.",[]],
+    ["u2","Last walk down Central Ave","Shops, the springs themselves, whatever we missed.",[]],
+    ["u3","Drive home","About four and a half hours.",[]]
+  ],
+  pack:[
+    ["k1","Hiking shoes","Trails are rocky with exposed roots.",[]],
+    ["k2","Layers","Cold mornings, mild afternoons.",[]],
+    ["k3","Water bottles","No water on the trails. Fill up at the springs downtown.",[]],
+    ["k4","Something decent for VAULT","",[]],
+    ["k5","Towels, the usual","",[]],
+    ["k6","Coffee and breakfast stuff","The cottage has a full kitchen.",[]],
+    ["k7","A deck of cards or the dice bag","For the cottage, after.",[]]
+  ]
+};
+
+var MAPS = {
+  p1:"Best Court 638 Ouachita Ave Hot Springs AR",
+  p2:"VAULT 723 Central Ave Hot Springs AR",
+  p3:"Garvan Woodland Gardens Hot Springs AR",
+  t1:"Best Court 638 Ouachita Ave Hot Springs AR",
+  t2:"Superior Bathhouse Brewery 329 Central Ave Hot Springs AR",
+  t3:"Bathhouse Row Hot Springs AR",
+  f1:"Gulpha Gorge Campground Hot Springs AR",
+  f2:"West Mountain Summit Hot Springs National Park AR",
+  f3:"Hot Springs Mountain Tower Hot Springs AR",
+  f6:"Spa Records 303 Albert Pike Rd Hot Springs AR",
+  f7:"Steam City Records 239 Central Ave Hot Springs AR",
+  f8:"Steadfast Hobbies and Games 614 Ouachita Ave Hot Springs AR",
+  f9:"West Mountain Summit Hot Springs National Park AR",
+  f5:"VAULT 723 Central Ave Hot Springs AR",
+  s1:"Garvan Woodland Gardens Hot Springs AR",
+  s2:"Crystal Ridge Distillery Hot Springs AR",
+  s3:"The GOAT Mediterranean Hot Springs AR",
+  u2:"Central Ave Hot Springs AR",
+  u3:"DIR:Norman, OK"
+};
+function mapUrl(q){
+  return q.indexOf('DIR:')===0
+    ? 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(q.slice(4))
+    : 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
+}
+
+var PROMPTS = [
+  "",
+  "Take a photo of each other right where you are standing.",
+  "Order the thing on the menu that neither of you recognizes.",
+  "Ask each other a question you have never asked before.",
+  "Whoever rolled lower picks what happens for the next hour.",
+  "Find something small to bring home. Under ten dollars.",
+  "Ten minutes, no phones. Starting now.",
+  "Say one thing out loud that you liked about today.",
+  "Let the other person choose your drink.",
+  "Take the longer way back.",
+  "Trade an embarrassing story neither of you has told yet.",
+  "Pick a stranger across the room and invent their whole backstory.",
+  "Stop walking. Look at one thing for a full minute."
+];
+
+var KEY='hs-expedition-app-v1', state={};
+try{ state = JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ state = {}; }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+function el(tag, cls){ var e=document.createElement(tag); if(cls)e.className=cls; return e; }
+
+function render(){
+  Object.keys(PLAN).forEach(function(section){
+    var host = document.getElementById(section);
+    host.textContent = '';
+    PLAN[section].forEach(function(row){
+      var id=row[0], title=row[1], meta=row[2], tags=row[3];
+      var c = el('div','card' + (state[id]?' done':''));
+      c.appendChild(el('div','box'));
+      var body = el('div');
+      var t = el('div','t'); t.textContent = title; body.appendChild(t);
+      if(meta){ var m=el('div','m'); m.textContent=meta; body.appendChild(m); }
+      tags.forEach(function(tg){ var s=el('span','tag'); s.textContent=tg; body.appendChild(s); });
+      if(MAPS[id]){
+        body.appendChild(el('br'));
+        var a=el('a','map'); a.href=mapUrl(MAPS[id]); a.target='_blank'; a.rel='noopener';
+        a.textContent='📍 '+(MAPS[id].indexOf('DIR:')===0?'Directions home':'Open in Maps');
+        a.addEventListener('click',function(e){ e.stopPropagation(); });
+        body.appendChild(a);
+      }
+      c.appendChild(body);
+      c.addEventListener('click',function(){ state[id]=!state[id]; save(); render(); });
+      host.appendChild(c);
+    });
+  });
+  tally();
+}
+
+function tally(){
+  var all=0, done=0;
+  Object.keys(PLAN).forEach(function(s){
+    PLAN[s].forEach(function(r){ all++; if(state[r[0]]) done++; });
+  });
+  document.getElementById('ptext').textContent = done+' / '+all;
+  document.getElementById('pbar').style.width = (all? done/all*100 : 0)+'%';
+}
+
+document.getElementById('reset').addEventListener('click',function(){ state={}; save(); render(); });
+
+/* ---------- 3D dice ---------- */
+var GOLD = '#e2b93b', GOLD_HEX = 0xc9a227;
+
+function faceTexture(n, shape){
+  var c = document.createElement('canvas'); c.width = c.height = 256;
+  var g = c.getContext('2d');
+  var grad = g.createLinearGradient(0,0,256,256);
+  grad.addColorStop(0,'#223a63'); grad.addColorStop(1,'#101c33');
+  g.fillStyle = grad; g.fillRect(0,0,256,256);
+  g.fillStyle = GOLD;
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  var size = shape==='d20' ? 78 : 96;
+  var cy = shape==='d20' ? 150 : 128;
+  g.font = '700 '+size+'px Georgia, "Times New Roman", serif';
+  g.fillText(String(n), 128, cy);
+  if(n===6 || n===9){
+    var w = g.measureText(String(n)).width;
+    g.fillRect(128 - w/2, cy + size*0.48, w, 6);
+  }
+  var tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  return tex;
+}
+
+function Die(canvas, shape){
+  var self = this;
+  this.shape = shape;
+  this.sides = shape==='d20' ? 20 : 12;
+  this.rolling = false;
+  this.idle = true;
+
+  var size = 124, dpr = Math.min(window.devicePixelRatio||1, 2);
+  this.renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:true});
+  this.renderer.setPixelRatio(dpr);
+  this.renderer.setSize(size, size, false);
+  this.scene = new THREE.Scene();
+  this.camera = new THREE.PerspectiveCamera(32, 1, 0.1, 20);
+  this.camera.position.set(0, 0, 4.2);
+  this.camera.lookAt(0,0,0);
+
+  this.scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  var key = new THREE.DirectionalLight(0xfff2cc, 0.9); key.position.set(2.5, 3, 4); this.scene.add(key);
+  var rim = new THREE.DirectionalLight(0x6f8fd6, 0.5); rim.position.set(-3, -2, 2); this.scene.add(rim);
+
+  var geo = shape==='d20' ? new THREE.IcosahedronGeometry(1, 0) : new THREE.DodecahedronGeometry(1, 0);
+  geo = geo.toNonIndexed();
+  var pos = geo.attributes.position;
+  var uv = new Float32Array(pos.count * 2);
+  var mats = [];
+  this.faces = [];
+
+  if(shape==='d20'){
+    var T = [[0.5,0.96],[0.04,0.17],[0.96,0.17]];
+    for(var f=0; f<20; f++){
+      for(var k=0;k<3;k++){ uv[(3*f+k)*2]=T[k][0]; uv[(3*f+k)*2+1]=T[k][1]; }
+      geo.addGroup(3*f, 3, f);
+      mats.push(new THREE.MeshStandardMaterial({map:faceTexture(f+1,shape), roughness:0.42, metalness:0.18}));
+      var a=new THREE.Vector3().fromBufferAttribute(pos,3*f),
+          b=new THREE.Vector3().fromBufferAttribute(pos,3*f+1),
+          c=new THREE.Vector3().fromBufferAttribute(pos,3*f+2);
+      var cen = a.clone().add(b).add(c).divideScalar(3);
+      this.faces.push({n: cen.clone().normalize(), up: a.clone().sub(cen).normalize(), value: f+1});
+    }
+  } else {
+    var P = [];
+    for(var i=0;i<5;i++){ var ang = Math.PI/2 + i*2*Math.PI/5; P.push([0.5+0.46*Math.cos(ang), 0.5+0.46*Math.sin(ang)]); }
+    var MAP = [0,1,4, 1,2,4, 2,3,4];
+    for(var f=0; f<12; f++){
+      for(var j=0;j<9;j++){ var vi=9*f+j, q=P[MAP[j]]; uv[vi*2]=q[0]; uv[vi*2+1]=q[1]; }
+      geo.addGroup(9*f, 9, f);
+      mats.push(new THREE.MeshStandardMaterial({map:faceTexture(f+1,shape), roughness:0.42, metalness:0.18}));
+      var idx=[9*f, 9*f+1, 9*f+4, 9*f+7, 9*f+2], cen=new THREE.Vector3();
+      idx.forEach(function(i){ cen.add(new THREE.Vector3().fromBufferAttribute(pos,i)); });
+      cen.divideScalar(5);
+      var top = new THREE.Vector3().fromBufferAttribute(pos,9*f);
+      this.faces.push({n: cen.clone().normalize(), up: top.clone().sub(cen).normalize(), value: f+1});
+    }
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+
+  this.mesh = new THREE.Mesh(geo, mats);
+  this.scene.add(this.mesh);
+  var edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 1), new THREE.LineBasicMaterial({color:GOLD_HEX}));
+  this.mesh.add(edges);
+
+  this.mesh.quaternion.copy(this.targetQuat(this.sides - 1));
+  this.spinVel = new THREE.Vector3(0.004, 0.006, 0.002);
+
+  var last = performance.now();
+  function loop(now){
+    var dt = Math.min(now - last, 50); last = now;
+    self.step(dt, now);
+    self.renderer.render(self.scene, self.camera);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+}
+
+Die.prototype.targetQuat = function(faceIndex){
+  var f = this.faces[faceIndex];
+  var q = new THREE.Quaternion().setFromUnitVectors(f.n, new THREE.Vector3(0,0,1));
+  var u = f.up.clone().applyQuaternion(q);
+  var theta = Math.PI/2 - Math.atan2(u.y, u.x);
+  var qz = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), theta);
+  return qz.multiply(q);
+};
+
+Die.prototype.step = function(dt, now){
+  var m = this.mesh;
+  if(this.rolling){
+    var t = now - this.rollStart;
+    if(t < this.tumbleMs){
+      var ease = 1 - t/this.tumbleMs;
+      var e = new THREE.Euler(this.spinVel.x*dt*(0.35+ease), this.spinVel.y*dt*(0.35+ease), this.spinVel.z*dt*(0.35+ease));
+      m.quaternion.multiply(new THREE.Quaternion().setFromEuler(e));
+      this.fromQuat = m.quaternion.clone();
+    } else {
+      var p = Math.min((t - this.tumbleMs)/this.settleMs, 1);
+      p = 1 - Math.pow(1-p, 3);
+      THREE.Quaternion.slerp(this.fromQuat, this.toQuat, m.quaternion, p);
+      if(p>=1){ this.rolling=false; this.idle=false; var cb=this.onDone; this.onDone=null; if(cb) cb(this.landed); }
+    }
+  } else if(this.idle){
+    var e2 = new THREE.Euler(0.00018*dt, 0.00032*dt, 0.0001*dt);
+    m.quaternion.multiply(new THREE.Quaternion().setFromEuler(e2));
+  }
+};
+
+Die.prototype.roll = function(cb){
+  if(this.rolling) return false;
+  this.rolling = true;
+  this.rollStart = performance.now();
+  this.tumbleMs = 780; this.settleMs = 520;
+  var s = function(){ return (Math.random()*0.012+0.014) * (Math.random()<0.5?-1:1); };
+  this.spinVel.set(s(), s(), s()*0.6);
+  this.landed = 1 + Math.floor(Math.random()*this.sides);
+  this.toQuat = this.targetQuat(this.landed - 1);
+  this.onDone = cb;
+  return true;
+};
+
+var d20 = null, d12 = null;
+try{
+  d20 = new Die(document.getElementById('d20'), 'd20');
+  d12 = new Die(document.getElementById('d12'), 'd12');
+}catch(e){
+  document.getElementById('d20out').textContent = 'Dice need WebGL.';
+}
+
+document.getElementById('d20card').addEventListener('click',function(){
+  if(!d20) return;
+  var out=document.getElementById('d20out');
+  if(d20.roll(function(r){
+    out.className='dieout';
+    if(r===20){ out.className='dieout crit'; out.innerHTML='<b>Natural 20.</b> The weather holds.'; }
+    else if(r===1){ out.className='dieout fumble'; out.innerHTML='<b>Natural 1.</b> Someone forgot the hiking shoes.'; }
+    else out.innerHTML='You rolled <b>'+r+'</b>.';
+  })) out.textContent='';
+});
+
+document.getElementById('d12card').addEventListener('click',function(){
+  if(!d12) return;
+  var out=document.getElementById('d12out');
+  if(d12.roll(function(r){
+    out.className='dieout';
+    out.innerHTML='<span class="prompt">'+PROMPTS[r]+'</span>';
+  })) out.textContent='';
+});
+
+render();
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
+</script>
+</body>
+</html>
